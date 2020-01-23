@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    // "incremental": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "jsx": "react",
+    "jsxFactory": "jsx",
+    "lib": ["es2017"],
+    "allowJs": true,
+    "outDir": "lib",
+    "rootDir": "src",
+    "declaration": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "baseUrl": "./src"
+  },
+  "exclude": ["./scripts/**", "./test/**", "./lib/**", "webpack.config.js", "cli.js"]
+}
