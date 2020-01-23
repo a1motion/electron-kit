@@ -7,8 +7,19 @@
     "electron-kit": "cli.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "version": "yarn build",
+    "np": "np --no-tests"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "./lib/*",
+    "cli.js",
+    "index.d.ts",
+    "managed.d.ts"
+  ],
   "peerDependencies": {
     "electron": "*"
   },
@@ -86,6 +97,7 @@
     "eslint-config-a1motion": "^3.1.1",
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-prettier": "^3.1.2",
+    "np": "^5.2.1",
     "prettier": "^1.19.1",
     "ts-json-schema-generator": "^0.58.1",
     "ts-node": "^8.5.4",
