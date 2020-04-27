@@ -4,16 +4,16 @@ import { Options } from "..";
 import appPaths from "../../config/paths";
 import { createLogger } from "../utils";
 
-const log = createLogger(`compiler`);
+const log = createLogger("compiler");
 
 export default function compile(_options: Options): Promise<webpack.Stats> {
   return new Promise((resolve, reject) => {
-    log(`compiling...`);
-    log(`removing old build...`);
+    log("compiling...");
+    log("removing old build...");
     fs.removeSync(appPaths.outputPath);
-    log(`starting webpack build...`);
+    log("starting webpack build...");
     const config = require(`../../config/webpack.${
-      _options.production ? `production` : `development`
+      _options.production ? "production" : "development"
     }.js`);
 
     webpack(config, (err, stats) => {
@@ -22,7 +22,7 @@ export default function compile(_options: Options): Promise<webpack.Stats> {
         return;
       }
 
-      log(`copying static files...`);
+      log("copying static files...");
       fs.copySync(appPaths.appStatic, appPaths.outputPath, {
         dereference: true,
         filter: (file) => file !== appPaths.appHtml,
@@ -30,7 +30,7 @@ export default function compile(_options: Options): Promise<webpack.Stats> {
 
       resolve(stats);
       setTimeout(() => {
-        log(`done`);
+        log("done");
       }, 0);
     });
   });

@@ -5,11 +5,11 @@ import * as common from "./webpack.common";
 import { resolveApp } from "./paths";
 
 const config: webpack.Configuration = {
-  mode: `development`,
-  devtool: `cheap-module-source-map`,
+  mode: "development",
+  devtool: "cheap-module-source-map",
 };
 
-const userMainConfigPath = resolveApp(`src/main/webpack.config.js`);
+const userMainConfigPath = resolveApp("src/main/webpack.config.js");
 let mainConfig = merge({}, common.main, config);
 if (fs.existsSync(userMainConfigPath)) {
   try {
@@ -26,7 +26,7 @@ const getRendererEntryPoint = () => {
   const entry = common.renderer.entry as webpack.Entry;
   if (!entry) {
     throw new Error(
-      `Unable to resolve entry point. Check webpack.common.ts and try again`
+      "Unable to resolve entry point. Check webpack.common.ts and try again"
     );
   }
 
@@ -50,11 +50,11 @@ const getPortOrDefault = () => {
 const port = getPortOrDefault();
 const webpackHotModuleReloadUrl = `?path=http://localhost:${port}/__webpack_hmr`;
 
-const userRendererConfigPath = resolveApp(`src/renderer/webpack.config.js`);
+const userRendererConfigPath = resolveApp("src/renderer/webpack.config.js");
 let rendererConfig = merge({}, common.renderer, config, {
   entry: {
     renderer: [
-      require.resolve(`webpack-hot-middleware/client`) +
+      require.resolve("webpack-hot-middleware/client") +
         webpackHotModuleReloadUrl,
       getRendererEntryPoint(),
     ],

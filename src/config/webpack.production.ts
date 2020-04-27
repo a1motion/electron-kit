@@ -10,8 +10,8 @@ import * as common from "./webpack.common";
 import { resolveApp } from "./paths";
 
 const config: webpack.Configuration = {
-  mode: `production`,
-  devtool: `source-map`,
+  mode: "production",
+  devtool: "source-map",
   optimization: {
     minimize: true,
     minimizer: [
@@ -45,24 +45,24 @@ const config: webpack.Configuration = {
           },
         },
         cssProcessorPluginOptions: {
-          preset: [`default`, { minifyFontValues: { removeQuotes: false } }],
+          preset: ["default", { minifyFontValues: { removeQuotes: false } }],
         },
       }),
     ],
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: `[name].css`,
+      filename: "[name].css",
     }),
   ],
 };
 
-const userMainConfigPath = resolveApp(`src/main/webpack.config.js`);
+const userMainConfigPath = resolveApp("src/main/webpack.config.js");
 let mainConfig = merge({}, common.main, config, {
   plugins: [
     new BundleAnalyzerPlugin({
-      analyzerMode: `static`,
-      reportFilename: `report.main.html`,
+      analyzerMode: "static",
+      reportFilename: "report.main.html",
     }),
   ],
 });
@@ -77,7 +77,7 @@ if (fs.existsSync(userMainConfigPath)) {
 
 const preloadConfig = merge({}, common.preload, config);
 
-const userRendererConfigPath = resolveApp(`src/renderer/webpack.config.js`);
+const userRendererConfigPath = resolveApp("src/renderer/webpack.config.js");
 let rendererConfig = merge({}, common.renderer, config);
 if (fs.existsSync(userRendererConfigPath)) {
   try {

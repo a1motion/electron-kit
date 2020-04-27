@@ -16,21 +16,21 @@ export interface Options {
   };
 }
 
-dotenv.config({ path: resolveApp(`.electron-kit/.env`) });
+dotenv.config({ path: resolveApp(".electron-kit/.env") });
 
 yargs
   .options({
     production: {
-      type: `boolean`,
+      type: "boolean",
       default: false,
     },
     skipCompile: {
-      type: `boolean`,
+      type: "boolean",
       default: false,
     },
     config: {
-      type: `string`,
-      default: resolveApp(`.electron-kit/config.js`),
+      type: "string",
+      default: resolveApp(".electron-kit/config.js"),
     },
   })
   .middleware((argv) => {
@@ -39,18 +39,18 @@ yargs
 
       argv.config = config;
     } catch (_e) {
-      throw new Error(`Missing config file.`);
+      throw new Error("Missing config file.");
     }
   })
   .middleware((argv) => {
-    process.env.NODE_ENV = argv.production ? `production` : `development`;
+    process.env.NODE_ENV = argv.production ? "production" : "development";
   })
-  .command(`compile`, ``, {}, (argv) =>
+  .command("compile", "", {}, (argv) =>
     compile(argv as Options)
       .then((stats: webpack.Stats) => {
         console.log(
           stats.toString({
-            ...webpack.Stats.presetToOptions(`minimal`),
+            ...webpack.Stats.presetToOptions("minimal"),
             colors: true,
             assets: true,
           })
@@ -60,7 +60,7 @@ yargs
         console.error(err);
       })
   )
-  .command(`start`, ``, {}, (argv) => start(argv as Options))
+  .command("start", "", {}, (argv) => start(argv as Options))
   .demandCommand()
   .strict()
   .help().argv;

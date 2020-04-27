@@ -13,23 +13,23 @@ const lessRegex = /\.(less)$/;
 
 const getStyleLoaders = (cssOptions: any, preProcessor?: any) => {
   const loaders: any = [
-    process.env.NODE_ENV === `development` && require.resolve(`style-loader`),
-    process.env.NODE_ENV === `production` && {
+    process.env.NODE_ENV === "development" && require.resolve("style-loader"),
+    process.env.NODE_ENV === "production" && {
       loader: MiniCssExtractPlugin.loader,
       options: {},
     },
     {
-      loader: require.resolve(`css-loader`),
+      loader: require.resolve("css-loader"),
       options: cssOptions,
     },
     {
-      loader: require.resolve(`postcss-loader`),
+      loader: require.resolve("postcss-loader"),
       options: {
-        indent: `postcss`,
+        indent: "postcss",
         plugins: () => [
-          require(`postcss-preset-env`)({
+          require("postcss-preset-env")({
             autoprefixer: {
-              flexbox: `no-2009`,
+              flexbox: "no-2009",
             },
             stage: 3,
           }),
@@ -41,9 +41,9 @@ const getStyleLoaders = (cssOptions: any, preProcessor?: any) => {
   if (preProcessor) {
     loaders.push(
       {
-        loader: require.resolve(`resolve-url-loader`),
+        loader: require.resolve("resolve-url-loader"),
         options: {
-          sourceMap: process.env.NODE_ENV === `production`,
+          sourceMap: process.env.NODE_ENV === "production",
         },
       },
       {
@@ -61,51 +61,52 @@ const getStyleLoaders = (cssOptions: any, preProcessor?: any) => {
 const commonConfig: (processType: ProcessType) => webpack.Configuration = (
   processType
 ) => ({
+  context: appPaths.appPath,
   output: {
-    filename: `[name].js`,
+    filename: "[name].js",
     path: appPaths.outputPath,
-    publicPath: `./`,
-    globalObject: processType === `main` ? `global` : `window`,
+    publicPath: "./",
+    globalObject: processType === "main" ? "global" : "window",
   },
   module: {
     strictExportPresence: true,
     rules: [
       {
         test: /\.(js, jsx)$/,
-        enforce: `pre`,
-        use: require.resolve(`source-map-loader`),
+        enforce: "pre",
+        use: require.resolve("source-map-loader"),
       },
       {
         oneOf: [
           {
             test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-            loader: require.resolve(`url-loader`),
+            loader: require.resolve("url-loader"),
             options: {
               limit: 10000,
-              name: `static/[name].[hash:8].[ext]`,
+              name: "static/[name].[hash:8].[ext]",
             },
           },
           {
             test: /\.node$/,
-            use: require.resolve(`node-loader`),
+            use: require.resolve("node-loader"),
           },
           {
             test: /\.(js|mjs|jsx|ts|tsx)$/,
             include: appPaths.appSrc,
-            loader: require.resolve(`babel-loader`),
+            loader: require.resolve("babel-loader"),
             options: babelOptions(processType),
           },
           {
             test: /\.(js|mjs)$/,
             exclude: /@babel(?:\/|\\{1,2})runtime/,
-            loader: require.resolve(`babel-loader`),
+            loader: require.resolve("babel-loader"),
             options: babelOptionsForDeps(processType),
           },
           {
             test: cssRegex,
             use: getStyleLoaders({
               importLoaders: 1,
-              sourceMap: process.env.NODE_ENV === `production`,
+              sourceMap: process.env.NODE_ENV === "production",
             }),
             sideEffects: true,
           },
@@ -114,9 +115,9 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
             use: getStyleLoaders(
               {
                 importLoaders: 2,
-                sourceMap: process.env.NODE_ENV === `production`,
+                sourceMap: process.env.NODE_ENV === "production",
               },
-              `sass-loader`
+              "sass-loader"
             ),
             sideEffects: true,
           },
@@ -125,17 +126,17 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
             use: getStyleLoaders(
               {
                 importLoaders: 2,
-                sourceMap: process.env.NODE_ENV === `production`,
+                sourceMap: process.env.NODE_ENV === "production",
               },
-              `less-loader`
+              "less-loader"
             ),
             sideEffects: true,
           },
           {
-            loader: require.resolve(`file-loader`),
+            loader: require.resolve("file-loader"),
             exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
             options: {
-              name: `static/[name].[hash:8].[ext]`,
+              name: "static/[name].[hash:8].[ext]",
             },
           },
         ],
@@ -148,13 +149,13 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
       __PROCESS_KIND__: JSON.stringify(processType),
       __VERSION__: JSON.stringify(require(appPaths.appPackageJson).version),
       "process.env.NODE_ENV": JSON.stringify(
-        process.env.NODE_ENV || `development`
+        process.env.NODE_ENV || "development"
       ),
     }),
   ],
   resolve: {
     extensions,
-    modules: [`node_modules`, appPaths.appNodeModules],
+    modules: ["node_modules", appPaths.appNodeModules],
   },
   node: {
     __dirname: false,
@@ -164,34 +165,34 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
   cache: true,
 });
 
-export const main = merge({}, commonConfig(`main`), {
-  name: `main`,
+export const main = merge({}, commonConfig("main"), {
+  name: "main",
   entry: {
     main: appPaths.appMainJs,
   },
-  target: `electron-main`,
+  target: "electron-main",
 });
-export const preload = merge({}, commonConfig(`renderer`), {
-  name: `preload`,
+export const preload = merge({}, commonConfig("renderer"), {
+  name: "preload",
   entry: {
     preload: appPaths.appPreloadJs,
   },
-  target: `electron-preload` as any,
+  target: "electron-preload" as any,
 });
 /**
  * TODO: add easier support for adding new entries
  */
-export const renderer = merge({}, commonConfig(`renderer`), {
-  name: `renderer`,
+export const renderer = merge({}, commonConfig("renderer"), {
+  name: "renderer",
   entry: {
     renderer: appPaths.appRendererJs,
   },
   plugins: [
     new HtmlWebpackPlugin({
       inject: true,
-      template: resolveApp(`src/static/index.html`),
-      chunks: [`renderer`],
+      template: resolveApp("src/static/index.html"),
+      chunks: ["renderer"],
     }),
   ],
-  target: `electron-renderer`,
+  target: "electron-renderer",
 });

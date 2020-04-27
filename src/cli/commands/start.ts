@@ -10,7 +10,7 @@ import appPaths, { resolveApp } from "../../config/paths";
 import { createLogger } from "../utils";
 import removeJunk from "../utils/removeElectronJunk";
 
-const log = createLogger(`dev-server`);
+const log = createLogger("dev-server");
 
 const getPortOrDefault = () => {
   const port = process.env.PORT;
@@ -31,18 +31,18 @@ export default async function run(options: Options) {
 
   if (
     path.resolve(appPaths.appPath, userPackageJson.main) !==
-    path.join(appPaths.outputPath, `main.js`)
+    path.join(appPaths.outputPath, "main.js")
   ) {
-    log(`Please set 'main' to 'out/main.js' in your 'package.json'.`);
+    log("Please set 'main' to 'out/main.js' in your 'package.json'.");
     process.exit(1);
     return;
   }
 
-  log(`starting run...`);
+  log("starting run...");
   await compile(options);
-  const [, , rendererConfig] = require(`../../config/webpack.development`);
+  const [, , rendererConfig] = require("../../config/webpack.development");
 
-  log(`starting dev server...`);
+  log("starting dev server...");
   const server = express();
   const compiler = webpack(rendererConfig);
   const port = getPortOrDefault();
@@ -50,17 +50,18 @@ export default async function run(options: Options) {
   server.use(
     devMiddleware(compiler, {
       publicPath: rendererConfig.output?.publicPath!,
-      logLevel: `error`,
+      logLevel: "error",
     })
   );
 
   server.use(
     hotMiddleware(compiler, {
+      //@ts-ignore
       dynamicPublicPath: rendererConfig.output.publicPath,
     })
   );
 
-  server.listen(port, `localhost`, (err) => {
+  server.listen(port, "localhost", (err) => {
     if (err) {
       console.error(err);
       process.exit(1);
@@ -70,7 +71,7 @@ export default async function run(options: Options) {
     log(`listening on port: ${port}`);
 
     const app = execa.command(
-      `${resolveApp(`node_modules/.bin/electron`)} ${appPaths.appPath}`
+      `${resolveApp("node_modules/.bin/electron")} ${appPaths.appPath}`
     );
     app.stdout?.pipe(removeJunk()).pipe(process.stdout);
     app.stderr?.pipe(removeJunk()).pipe(process.stderr);
