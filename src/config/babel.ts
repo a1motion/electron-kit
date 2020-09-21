@@ -6,6 +6,7 @@ export interface BabelPresetEnvOptions {
   corejs?: 2 | 3 | { version: 2 | 3; proposals: boolean };
   modules?: boolean;
   exclude?: string[];
+  compact?: boolean | "auto";
 }
 
 const absoluteRuntimePath = path.dirname(

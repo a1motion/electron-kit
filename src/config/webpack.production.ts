@@ -8,6 +8,7 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import { BundleAnalyzerPlugin } from "webpack-bundle-analyzer";
 import * as common from "./webpack.common";
 import { resolveApp } from "./paths";
+import { Options } from "../cli";
 
 const config: webpack.Configuration = {
   mode: "production",
@@ -58,14 +59,15 @@ const config: webpack.Configuration = {
 };
 
 const userMainConfigPath = resolveApp("src/main/webpack.config.js");
-let mainConfig = merge({}, common.main, config, {
-  plugins: [
-    new BundleAnalyzerPlugin({
-      analyzerMode: "static",
-      reportFilename: "report.main.html",
-    }),
-  ],
-});
+let mainConfig = (userConfig: Options) =>
+  merge({}, common.main(userConfig), config, {
+    plugins: [
+      new BundleAnalyzerPlugin({
+        analyzerMode: "static",
+        reportFilename: "report.main.html",
+      }),
+    ],
+  });
 if (fs.existsSync(userMainConfigPath)) {
   try {
     mainConfig = require(userMainConfigPath)(mainConfig);
@@ -75,17 +77,26 @@ if (fs.existsSync(userMainConfigPath)) {
   }
 }
 
-const preloadConfig = merge({}, common.preload, config);
+const preloadConfig = (userConfig: Options) =>
+  merge({}, common.preload(userConfig), config);
 
 const userRendererConfigPath = resolveApp("src/renderer/webpack.config.js");
-let rendererConfig = merge({}, common.renderer, config);
-if (fs.existsSync(userRendererConfigPath)) {
-  try {
-    rendererConfig = require(userRendererConfigPath)(rendererConfig);
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
+const rendererConfig = (userConfig: Options) => {
+  let _rendererConfig = merge({}, common.renderer(userConfig), config);
+  if (fs.existsSync(userRendererConfigPath)) {
+    try {
+      _rendererConfig = require(userRendererConfigPath)(_rendererConfig);
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
   }
-}
 
-export = [mainConfig, preloadConfig, rendererConfig];
+  return _rendererConfig;
+};
+
+export = (userConfig: Options) => [
+  mainConfig(userConfig),
+  preloadConfig(userConfig),
+  rendererConfig(userConfig),
+];

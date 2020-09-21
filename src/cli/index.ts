@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import path from "path";
 import yargs from "yargs";
 import dotenv from "dotenv";
 import { start, compile } from "./commands";
@@ -12,7 +13,17 @@ export interface Options {
   production: boolean;
   skipCompile: boolean;
   config: {
-    build: any;
+    build?: any;
+    renderer?: {
+      entries?: {
+        [key: string]: string;
+      };
+    };
+    preload?: {
+      entries?: {
+        [key: string]: string;
+      };
+    };
   };
 }
 
@@ -30,12 +41,12 @@ yargs
     },
     config: {
       type: "string",
-      default: resolveApp(".electron-kit/config.js"),
+      default: "./electron-kit.config.js",
     },
   })
   .middleware((argv) => {
     try {
-      const config = require(argv.config);
+      const config = require(path.resolve(argv.config));
 
       argv.config = config;
     } catch (_e) {

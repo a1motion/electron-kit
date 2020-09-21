@@ -1,3 +1,4 @@
+import fs from "fs";
 import webpack from "webpack";
 import merge from "webpack-merge";
 import HtmlWebpackPlugin from "html-webpack-plugin";
@@ -6,6 +7,7 @@ import postcssNormalize from "postcss-normalize";
 import appPaths, { extensions, resolveApp } from "./paths";
 import babelOptions from "./babel";
 import babelOptionsForDeps from "./babelDeps";
+import { Options } from "../cli";
 
 const cssRegex = /\.css$/;
 const sassRegex = /\.(scss|sass)$/;
@@ -165,34 +167,57 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
   cache: true,
 });
 
-export const main = merge({}, commonConfig("main"), {
-  name: "main",
-  entry: {
-    main: appPaths.appMainJs,
-  },
-  target: "electron-main",
-});
-export const preload = merge({}, commonConfig("renderer"), {
-  name: "preload",
-  entry: {
+export const main = (userConfig: Options) =>
+  merge({}, commonConfig("main"), {
+    name: "main",
+    entry: {
+      main: appPaths.appMainJs,
+    },
+    target: "electron-main",
+  });
+export const preload = (userConfig: Options) => {
+  const entries = {
     preload: appPaths.appPreloadJs,
-  },
-  target: "electron-preload" as any,
-});
+    ...(userConfig?.config?.preload?.entries ?? {}),
+  };
+  return merge({}, commonConfig("renderer"), {
+    name: "preload",
+    entry: entries,
+    target: "electron-preload" as any,
+  });
+};
 /**
  * TODO: add easier support for adding new entries
  */
-export const renderer = merge({}, commonConfig("renderer"), {
-  name: "renderer",
-  entry: {
-    renderer: appPaths.appRendererJs,
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
+
+function findHTMLTemplateForEntry(entry: string) {
+  if (fs.existsSync(resolveApp(`src/static/${entry}.html`))) {
+    return resolveApp(`src/static/${entry}.html`);
+  }
+
+  return resolveApp("src/static/index.html");
+}
+
+function createHtmlPluginsForEntries(entries: string[]) {
+  return entries.map((entry) => {
+    return new HtmlWebpackPlugin({
       inject: true,
-      template: resolveApp("src/static/index.html"),
-      chunks: ["renderer"],
-    }),
-  ],
-  target: "electron-renderer",
-});
+      template: findHTMLTemplateForEntry(entry),
+      chunks: [entry],
+      filename: entry === "renderer" ? "index.html" : `${entry}.html`,
+    });
+  });
+}
+
+export const renderer = (userConfig: Options) => {
+  const entries = {
+    renderer: appPaths.appRendererJs,
+    ...(userConfig?.config?.renderer?.entries ?? {}),
+  };
+  return merge({}, commonConfig("renderer"), {
+    name: "renderer",
+    entry: entries,
+    plugins: [...createHtmlPluginsForEntries(Object.keys(entries))],
+    target: "electron-renderer",
+  });
+};

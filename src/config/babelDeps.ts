@@ -17,6 +17,7 @@ const babelOptionsForDeps = (processType: ProcessType) => {
 
   return {
     sourceType: "unambiguous",
+    compact: true,
     presets: [[require("@babel/preset-env").default, envOptions]],
     plugins: [
       require("@babel/plugin-proposal-optional-chaining").default,

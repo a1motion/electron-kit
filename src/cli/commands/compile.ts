@@ -1,10 +1,16 @@
 import fs from "fs-extra";
 import webpack from "webpack";
 import { Options } from "..";
-import appPaths from "../../config/paths";
+import appPaths, { resolveApp } from "../../config/paths";
 import { createLogger } from "../utils";
 
 const log = createLogger("compiler");
+
+function getEntryPointTemplates(options: Options) {
+  return ["index"]
+    .concat(Object.keys(options?.config?.renderer?.entries ?? {}))
+    .map((value) => resolveApp(`src/static/${value}.html`));
+}
 
 export default function compile(_options: Options): Promise<webpack.Stats> {
   return new Promise((resolve, reject) => {
@@ -14,7 +20,7 @@ export default function compile(_options: Options): Promise<webpack.Stats> {
     log("starting webpack build...");
     const config = require(`../../config/webpack.${
       _options.production ? "production" : "development"
-    }.js`);
+    }.js`)(_options);
 
     webpack(config, (err, stats) => {
       if (err) {
@@ -23,9 +29,10 @@ export default function compile(_options: Options): Promise<webpack.Stats> {
       }
 
       log("copying static files...");
+      const templates = getEntryPointTemplates(_options);
       fs.copySync(appPaths.appStatic, appPaths.outputPath, {
         dereference: true,
-        filter: (file) => file !== appPaths.appHtml,
+        filter: (file) => !templates.includes(file),
       });
 
       resolve(stats);

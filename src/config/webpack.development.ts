@@ -3,6 +3,7 @@ import webpack from "webpack";
 import merge from "webpack-merge";
 import * as common from "./webpack.common";
 import { resolveApp } from "./paths";
+import { Options } from "../cli";
 
 const config: webpack.Configuration = {
   mode: "development",
@@ -10,7 +11,8 @@ const config: webpack.Configuration = {
 };
 
 const userMainConfigPath = resolveApp("src/main/webpack.config.js");
-let mainConfig = merge({}, common.main, config);
+let mainConfig = (userConfig: Options) =>
+  merge({}, common.main(userConfig), config);
 if (fs.existsSync(userMainConfigPath)) {
   try {
     mainConfig = require(userMainConfigPath)(mainConfig);
@@ -20,18 +22,8 @@ if (fs.existsSync(userMainConfigPath)) {
   }
 }
 
-const preloadConfig = merge({}, common.preload, config);
-
-const getRendererEntryPoint = () => {
-  const entry = common.renderer.entry as webpack.Entry;
-  if (!entry) {
-    throw new Error(
-      "Unable to resolve entry point. Check webpack.common.ts and try again"
-    );
-  }
-
-  return entry.renderer as string;
-};
+const preloadConfig = (userConfig: Options) =>
+  merge({}, common.preload(userConfig), config);
 
 const getPortOrDefault = () => {
   const port = process.env.PORT;
@@ -51,26 +43,39 @@ const port = getPortOrDefault();
 const webpackHotModuleReloadUrl = `?path=http://localhost:${port}/__webpack_hmr`;
 
 const userRendererConfigPath = resolveApp("src/renderer/webpack.config.js");
-let rendererConfig = merge({}, common.renderer, config, {
-  entry: {
-    renderer: [
-      require.resolve("webpack-hot-middleware/client") +
-        webpackHotModuleReloadUrl,
-      getRendererEntryPoint(),
-    ],
-  },
-  output: {
-    publicPath: `http://localhost:${port}/`,
-  },
-  plugins: [new webpack.HotModuleReplacementPlugin()],
-});
-if (fs.existsSync(userRendererConfigPath)) {
-  try {
-    rendererConfig = require(userRendererConfigPath)(rendererConfig);
-  } catch (e) {
-    console.log(e);
-    process.exit(1);
+const rendererConfig = (userConfig: Options) => {
+  const commonRendererConfig = common.renderer(userConfig);
+  const entries = Object.entries(commonRendererConfig.entry as any).reduce(
+    (obj: { [key: string]: string[] }, [name, value]: any) => {
+      obj[name] = [
+        require.resolve("webpack-hot-middleware/client") +
+          webpackHotModuleReloadUrl,
+      ].concat(Array.isArray(value) ? value : [value]);
+      return obj;
+    },
+    {}
+  );
+  let _rendererConfig = merge({}, common.renderer(userConfig), config, {
+    entry: entries,
+    output: {
+      publicPath: `http://localhost:${port}/`,
+    },
+    plugins: [new webpack.HotModuleReplacementPlugin()],
+  });
+  if (fs.existsSync(userRendererConfigPath)) {
+    try {
+      _rendererConfig = require(userRendererConfigPath)(_rendererConfig);
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
   }
-}
 
-export = [mainConfig, preloadConfig, rendererConfig];
+  return _rendererConfig;
+};
+
+export = (userConfig: Options) => [
+  mainConfig(userConfig),
+  preloadConfig(userConfig),
+  rendererConfig(userConfig),
+];

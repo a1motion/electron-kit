@@ -5,7 +5,6 @@ import devMiddleware from "webpack-dev-middleware";
 import hotMiddleware from "webpack-hot-middleware";
 import execa from "execa";
 import { Options } from "..";
-import compile from "./compile";
 import appPaths, { resolveApp } from "../../config/paths";
 import { createLogger } from "../utils";
 import removeJunk from "../utils/removeElectronJunk";
@@ -38,28 +37,80 @@ export default async function run(options: Options) {
     return;
   }
 
-  log("starting run...");
-  await compile(options);
-  const [, , rendererConfig] = require("../../config/webpack.development");
+  // log("starting run...");
+  // await compile(options);
+  const [
+    mainConfig,
+    preloadConfig,
+    rendererConfig,
+  ] = require("../../config/webpack.development")(options);
 
   log("starting dev server...");
   const server = express();
-  const compiler = webpack(rendererConfig);
+  const mainCompiler = webpack(mainConfig);
+  const preloadCompiler = webpack(preloadConfig);
+  const rendererCompiler = webpack(rendererConfig);
   const port = getPortOrDefault();
 
   server.use(
-    devMiddleware(compiler, {
+    devMiddleware(rendererCompiler, {
       publicPath: rendererConfig.output?.publicPath!,
       logLevel: "error",
     })
   );
 
   server.use(
-    hotMiddleware(compiler, {
+    hotMiddleware(rendererCompiler, {
       //@ts-ignore
       dynamicPublicPath: rendererConfig.output.publicPath,
     })
   );
+
+  server.use(express.static(appPaths.appStatic));
+
+  let electronProcess: execa.ExecaChildProcess<string>;
+  let loaded = 0;
+
+  function reloadOrStartElectronProcess() {
+    if (loaded !== 7) {
+      return;
+    }
+
+    if (electronProcess) {
+      log("killing existing electron process");
+      electronProcess.kill("SIGTERM");
+    }
+
+    log("starting electron process");
+
+    electronProcess = execa.command(
+      `${resolveApp("node_modules/.bin/electron")} ${appPaths.appPath}`
+    );
+    electronProcess.stdout?.pipe(removeJunk()).pipe(process.stdout);
+    electronProcess.stderr?.pipe(removeJunk()).pipe(process.stderr);
+  }
+
+  mainCompiler.watch({}, (err, stats) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+      return;
+    }
+
+    loaded |= 1 << 0;
+    reloadOrStartElectronProcess();
+  });
+
+  preloadCompiler.watch({}, (err, stats) => {
+    if (err) {
+      console.error(err);
+      process.exit(1);
+      return;
+    }
+
+    loaded |= 1 << 1;
+    reloadOrStartElectronProcess();
+  });
 
   server.listen(port, "localhost", (err) => {
     if (err) {
@@ -68,12 +119,10 @@ export default async function run(options: Options) {
       return;
     }
 
+    loaded |= 1 << 2;
+
     log(`listening on port: ${port}`);
 
-    const app = execa.command(
-      `${resolveApp("node_modules/.bin/electron")} ${appPaths.appPath}`
-    );
-    app.stdout?.pipe(removeJunk()).pipe(process.stdout);
-    app.stderr?.pipe(removeJunk()).pipe(process.stderr);
+    reloadOrStartElectronProcess();
   });
 }
