@@ -1,6 +1,7 @@
 import fs from "fs";
 import webpack from "webpack";
 import merge from "webpack-merge";
+import ReactRefreshWebpackPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import * as common from "./webpack.common";
 import { resolveApp } from "./paths";
 import { Options } from "../cli";
@@ -40,27 +41,16 @@ const getPortOrDefault = () => {
 };
 
 const port = getPortOrDefault();
-const webpackHotModuleReloadUrl = `?path=http://localhost:${port}/__webpack_hmr`;
-
 const userRendererConfigPath = resolveApp("src/renderer/webpack.config.js");
 const rendererConfig = (userConfig: Options) => {
-  const commonRendererConfig = common.renderer(userConfig);
-  const entries = Object.entries(commonRendererConfig.entry as any).reduce(
-    (obj: { [key: string]: string[] }, [name, value]: any) => {
-      obj[name] = [
-        require.resolve("webpack-hot-middleware/client") +
-          webpackHotModuleReloadUrl,
-      ].concat(Array.isArray(value) ? value : [value]);
-      return obj;
-    },
-    {}
-  );
   let _rendererConfig = merge({}, common.renderer(userConfig), config, {
-    entry: entries,
     output: {
       publicPath: `http://localhost:${port}/`,
     },
-    plugins: [new webpack.HotModuleReplacementPlugin()],
+    plugins: [
+      new webpack.HotModuleReplacementPlugin(),
+      new ReactRefreshWebpackPlugin(),
+    ],
   });
   if (fs.existsSync(userRendererConfigPath)) {
     try {

@@ -19,11 +19,10 @@ const config: webpack.Configuration = {
       new TerserPlugin({
         terserOptions: {
           parse: {
-            ecma: 8,
+            ecma: 2020,
           },
           compress: {
-            ecma: 6,
-            warnings: false,
+            ecma: 2015,
             comparisons: false,
             inline: 2,
           },
@@ -31,11 +30,10 @@ const config: webpack.Configuration = {
             safari10: false,
           },
           output: {
-            ecma: 6,
+            ecma: 2015,
             comments: false,
           },
         },
-        sourceMap: true,
       }),
       new OptimizeCSSAssetsPlugin({
         cssProcessorOptions: {

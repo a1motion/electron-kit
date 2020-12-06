@@ -55,7 +55,6 @@ export default async function run(options: Options) {
   server.use(
     devMiddleware(rendererCompiler, {
       publicPath: rendererConfig.output?.publicPath!,
-      logLevel: "error",
     })
   );
 
@@ -112,13 +111,7 @@ export default async function run(options: Options) {
     reloadOrStartElectronProcess();
   });
 
-  server.listen(port, "localhost", (err) => {
-    if (err) {
-      console.error(err);
-      process.exit(1);
-      return;
-    }
-
+  server.listen(port, "localhost", () => {
     loaded |= 1 << 2;
 
     log(`listening on port: ${port}`);

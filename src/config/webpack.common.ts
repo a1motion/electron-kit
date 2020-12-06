@@ -27,16 +27,18 @@ const getStyleLoaders = (cssOptions: any, preProcessor?: any) => {
     {
       loader: require.resolve("postcss-loader"),
       options: {
-        indent: "postcss",
-        plugins: () => [
-          require("postcss-preset-env")({
-            autoprefixer: {
-              flexbox: "no-2009",
-            },
-            stage: 3,
-          }),
-          postcssNormalize(),
-        ],
+        postcssOptions: {
+          indent: "postcss",
+          plugins: [
+            require("postcss-preset-env")({
+              autoprefixer: {
+                flexbox: "no-2009",
+              },
+              stage: 3,
+            }),
+            postcssNormalize(),
+          ],
+        },
       },
     },
   ].filter(Boolean);
@@ -146,7 +148,10 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
     ],
   },
   plugins: [
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^\.\/locale$/,
+      contextRegExp: /moment$/,
+    }),
     new webpack.DefinePlugin({
       __PROCESS_KIND__: JSON.stringify(processType),
       __VERSION__: JSON.stringify(require(appPaths.appPackageJson).version),
@@ -198,7 +203,7 @@ function findHTMLTemplateForEntry(entry: string) {
   return resolveApp("src/static/index.html");
 }
 
-function createHtmlPluginsForEntries(entries: string[]) {
+function createHtmlPluginsForEntries(entries: string[]): any {
   return entries.map((entry) => {
     return new HtmlWebpackPlugin({
       inject: true,

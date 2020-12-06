@@ -34,6 +34,7 @@ const babelOptions = (processType: ProcessType) => {
         require("@babel/preset-react").default,
         {
           development: process.env.NODE_ENV === "development",
+          runtime: "automatic",
         },
       ],
       require("@babel/preset-typescript").default,
@@ -88,7 +89,8 @@ const babelOptions = (processType: ProcessType) => {
         },
       ],
       require("@babel/plugin-syntax-dynamic-import").default,
-    ],
+      process.env.NODE_ENV === "development" && require("react-refresh/babel"),
+    ].filter(Boolean),
     sourceMaps: true,
   };
 };

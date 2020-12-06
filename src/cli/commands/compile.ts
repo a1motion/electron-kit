@@ -35,7 +35,7 @@ export default function compile(_options: Options): Promise<webpack.Stats> {
         filter: (file) => !templates.includes(file),
       });
 
-      resolve(stats);
+      resolve(stats!);
       setTimeout(() => {
         log("done");
       }, 0);
