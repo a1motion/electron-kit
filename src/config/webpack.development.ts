@@ -12,8 +12,7 @@ const config: webpack.Configuration = {
 };
 
 const userMainConfigPath = resolveApp("src/main/webpack.config.js");
-let mainConfig = (userConfig: Options) =>
-  merge({}, common.main(userConfig), config);
+let mainConfig = (userConfig: Options) => merge({}, common.main(userConfig), config);
 if (fs.existsSync(userMainConfigPath)) {
   try {
     mainConfig = require(userMainConfigPath)(mainConfig);
@@ -23,8 +22,7 @@ if (fs.existsSync(userMainConfigPath)) {
   }
 }
 
-const preloadConfig = (userConfig: Options) =>
-  merge({}, common.preload(userConfig), config);
+const preloadConfig = (userConfig: Options) => merge({}, common.preload(userConfig), config);
 
 const getPortOrDefault = () => {
   const port = process.env.PORT;
@@ -47,10 +45,7 @@ const rendererConfig = (userConfig: Options) => {
     output: {
       publicPath: `http://localhost:${port}/`,
     },
-    plugins: [
-      new webpack.HotModuleReplacementPlugin(),
-      new ReactRefreshWebpackPlugin(),
-    ],
+    plugins: [new webpack.HotModuleReplacementPlugin(), new ReactRefreshWebpackPlugin()],
   });
   if (fs.existsSync(userRendererConfigPath)) {
     try {
@@ -64,8 +59,4 @@ const rendererConfig = (userConfig: Options) => {
   return _rendererConfig;
 };
 
-export = (userConfig: Options) => [
-  mainConfig(userConfig),
-  preloadConfig(userConfig),
-  rendererConfig(userConfig),
-];
+export = (userConfig: Options) => [mainConfig(userConfig), preloadConfig(userConfig), rendererConfig(userConfig)];

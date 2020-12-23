@@ -1,8 +1,6 @@
 import path from "path";
-import express from "express";
 import webpack from "webpack";
-import devMiddleware from "webpack-dev-middleware";
-import hotMiddleware from "webpack-hot-middleware";
+import WebpackDevServer from "webpack-dev-server";
 import execa from "execa";
 import { Options } from "..";
 import appPaths, { resolveApp } from "../../config/paths";
@@ -28,10 +26,7 @@ const getPortOrDefault = () => {
 export default async function run(options: Options) {
   const userPackageJson = require(appPaths.appPackageJson);
 
-  if (
-    path.resolve(appPaths.appPath, userPackageJson.main) !==
-    path.join(appPaths.outputPath, "main.js")
-  ) {
+  if (path.resolve(appPaths.appPath, userPackageJson.main) !== path.join(appPaths.outputPath, "main.js")) {
     log("Please set 'main' to 'out/main.js' in your 'package.json'.");
     process.exit(1);
     return;
@@ -39,33 +34,23 @@ export default async function run(options: Options) {
 
   // log("starting run...");
   // await compile(options);
-  const [
-    mainConfig,
-    preloadConfig,
-    rendererConfig,
-  ] = require("../../config/webpack.development")(options);
+  const [mainConfig, preloadConfig, rendererConfig] = require("../../config/webpack.development")(options);
 
   log("starting dev server...");
-  const server = express();
+
   const mainCompiler = webpack(mainConfig);
   const preloadCompiler = webpack(preloadConfig);
   const rendererCompiler = webpack(rendererConfig);
   const port = getPortOrDefault();
 
-  server.use(
-    devMiddleware(rendererCompiler, {
-      publicPath: rendererConfig.output?.publicPath!,
-    })
-  );
-
-  server.use(
-    hotMiddleware(rendererCompiler, {
-      //@ts-ignore
-      dynamicPublicPath: rendererConfig.output.publicPath,
-    })
-  );
-
-  server.use(express.static(appPaths.appStatic));
+  const server = new WebpackDevServer(rendererCompiler, {
+    hot: true,
+    transportMode: "ws",
+    historyApiFallback: true,
+    port,
+    contentBase: appPaths.appStatic,
+    noInfo: true,
+  });
 
   let electronProcess: execa.ExecaChildProcess<string>;
   let loaded = 0;
@@ -82,9 +67,7 @@ export default async function run(options: Options) {
 
     log("starting electron process");
 
-    electronProcess = execa.command(
-      `${resolveApp("node_modules/.bin/electron")} ${appPaths.appPath}`
-    );
+    electronProcess = execa.command(`${resolveApp("node_modules/.bin/electron")} ${appPaths.appPath}`);
     electronProcess.stdout?.pipe(removeJunk()).pipe(process.stdout);
     electronProcess.stderr?.pipe(removeJunk()).pipe(process.stderr);
   }

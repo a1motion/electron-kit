@@ -62,9 +62,7 @@ const getStyleLoaders = (cssOptions: any, preProcessor?: any) => {
   return loaders;
 };
 
-const commonConfig: (processType: ProcessType) => webpack.Configuration = (
-  processType
-) => ({
+const commonConfig: (processType: ProcessType) => webpack.Configuration = (processType) => ({
   context: appPaths.appPath,
   output: {
     filename: "[name].js",
@@ -155,9 +153,7 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
     new webpack.DefinePlugin({
       __PROCESS_KIND__: JSON.stringify(processType),
       __VERSION__: JSON.stringify(require(appPaths.appPackageJson).version),
-      "process.env.NODE_ENV": JSON.stringify(
-        process.env.NODE_ENV || "development"
-      ),
+      "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
     }),
   ],
   resolve: {
@@ -170,6 +166,18 @@ const commonConfig: (processType: ProcessType) => webpack.Configuration = (
     global: true,
   },
   cache: true,
+  externals: [
+    (() => {
+      const IGNORES = ["electron"];
+      return (context: string, request: string, callback: (a?: any, b?: string) => void) => {
+        if (IGNORES.indexOf(request) >= 0) {
+          return callback(null, "require('" + request + "')");
+        }
+
+        return callback();
+      };
+    })(),
+  ],
 });
 
 export const main = (userConfig: Options) =>
@@ -223,6 +231,6 @@ export const renderer = (userConfig: Options) => {
     name: "renderer",
     entry: entries,
     plugins: [...createHtmlPluginsForEntries(Object.keys(entries))],
-    target: "electron-renderer",
+    target: "web",
   });
 };
